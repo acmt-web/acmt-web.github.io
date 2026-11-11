@@ -229,6 +229,20 @@
       .noscript-list { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 15px; }
       .noscript-list a { color: var(--gold-strong); }
 
+      .series-group { margin-bottom: 38px; }
+      .series-group:last-child { margin-bottom: 0; }
+      .series-head {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+      }
+      .series-title {
+        font-family: "Noto Serif Myanmar", serif; font-weight: 700;
+        font-size: clamp(19px, 2.8vw, 24px); line-height: 1.5; margin: 0;
+      }
+      .series-count {
+        font-size: 12.5px; font-weight: 700; color: var(--gold-strong);
+        background: var(--gold-soft); padding: 2px 11px; border-radius: 999px;
+      }
       .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
       .ep-card {
         background: var(--bg-raise); border: 1px solid var(--line);
@@ -367,7 +381,7 @@
           <input id="storySearch" type="search" autocomplete="off" aria-label="ဇာတ်လမ်းရှာရန်" />
           <button class="search-clear" id="searchClear" type="button" aria-label="ရှာထားတာ ရှင်းရန်" hidden>&times;</button>
         </div>
-        <div class="ep-grid" id="epGrid"><!-- episodes rendered by script --></div>
+        <div id="seriesList"><!-- series sections rendered by script --></div>
         <noscript>
           <ul class="noscript-list">
             <li><a href="https://vt.tiktok.com/ZSpSmH31A/" target="_blank" rel="noopener">ဆင်းရဲသားတစ်ယောက်ရဲ့အိမ်မက် အပိုင်း ၁ — TikTok မှာ ကြည့်ရန်</a></li>
@@ -534,7 +548,7 @@
         return a;
       }
 
-      var grid = document.getElementById("epGrid");
+      var seriesList = document.getElementById("seriesList");
       var searchInput = document.getElementById("storySearch");
       var searchClear = document.getElementById("searchClear");
 
@@ -543,30 +557,66 @@
       function normalizeDigits(s) {
         return s.replace(/[၀-၉]/g, function (d) { return String(BURMESE_DIGITS.indexOf(d)); });
       }
+      function toBurmeseDigits(n) {
+        return String(n).replace(/[0-9]/g, function (d) { return BURMESE_DIGITS[Number(d)]; });
+      }
+
+      // Series names in catalog order (first appearance wins).
+      var SERIES_ORDER = [];
+      EPISODES.forEach(function (ep) {
+        if (SERIES_ORDER.indexOf(ep.series) === -1) SERIES_ORDER.push(ep.series);
+      });
 
       function renderEpisodes() {
         var q = normalizeDigits(searchInput.value.trim());
-        grid.textContent = "";
+        seriesList.textContent = "";
         var matched = 0;
-        EPISODES.forEach(function (ep) {
-          var hay = normalizeDigits(ep.series + " " + ep.episode);
-          if (!q || hay.indexOf(q) !== -1) {
-            grid.appendChild(episodeCard(ep));
-            matched++;
-          }
+        SERIES_ORDER.forEach(function (series) {
+          var all = EPISODES.filter(function (ep) { return ep.series === series; });
+          var shown = all.filter(function (ep) {
+            var hay = normalizeDigits(ep.series + " " + ep.episode);
+            return !q || hay.indexOf(q) !== -1;
+          });
+          if (!shown.length) return; // hide series with no matching episodes
+          matched += shown.length;
+
+          var group = document.createElement("div");
+          group.className = "series-group";
+
+          var head = document.createElement("div");
+          head.className = "series-head";
+          var title = document.createElement("h3");
+          title.className = "series-title";
+          title.textContent = series;
+          var count = document.createElement("span");
+          count.className = "series-count";
+          count.textContent = "အပိုင်း " + toBurmeseDigits(all.length) + " ပိုင်း";
+          head.appendChild(title);
+          head.appendChild(count);
+
+          var grid = document.createElement("div");
+          grid.className = "ep-grid";
+          shown.forEach(function (ep) { grid.appendChild(episodeCard(ep)); });
+
+          group.appendChild(head);
+          group.appendChild(grid);
+          seriesList.appendChild(group);
         });
         if (!q) {
+          var soonWrap = document.createElement("div");
+          soonWrap.className = "ep-grid";
           var soon = document.createElement("div");
           soon.className = "soon-card";
           soon.innerHTML =
             "<strong>နောက်ထပ် ဇာတ်လမ်းများ မကြာခင်</strong>" +
             "<p>ဇာတ်လမ်းသစ်တွေ ထွက်လာတဲ့အခါ ဒီနေရာမှာ ထပ်ထည့်ပေးပါမယ်။</p>";
-          grid.appendChild(soon);
+          soonWrap.appendChild(soon);
+          seriesList.appendChild(soonWrap);
         } else if (matched === 0) {
           var none = document.createElement("p");
           none.className = "no-result";
           none.textContent = "ရှာတွေ့တဲ့ ဇာတ်လမ်း မရှိပါ။";
-          grid.appendChild(none);
+          seriesList.appendChild(none);
         }
         searchClear.hidden = !searchInput.value;
       }
