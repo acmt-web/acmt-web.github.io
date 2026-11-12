@@ -239,10 +239,6 @@
         font-family: "Noto Serif Myanmar", serif; font-weight: 700;
         font-size: clamp(19px, 2.8vw, 24px); line-height: 1.5; margin: 0;
       }
-      .series-count {
-        font-size: 12.5px; font-weight: 700; color: var(--gold-strong);
-        background: var(--gold-soft); padding: 2px 11px; border-radius: 999px;
-      }
       .ep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
       .ep-card {
         background: var(--bg-raise); border: 1px solid var(--line);
@@ -350,7 +346,7 @@
             </span>
           </div>
           <div>
-            <p class="kicker">နောက်ဆုံးထွက် ဇာတ်လမ်း · အပိုင်း ၃ · ဇာတ်သိမ်းပိုင်း</p>
+            <p class="kicker">နောက်ဆုံးထွက် ဇာတ်လမ်း</p>
             <h1>မိဘ၏မေတ္တာ</h1>
             <p class="hero-sub">
               သစ်သီးဈေးက အဖေသရက်သီးနဲ့ သားမက်မွန်သီးတို့ရဲ့ မိဘမေတ္တာ ဇာတ်လမ်း
@@ -557,9 +553,6 @@
       function normalizeDigits(s) {
         return s.replace(/[၀-၉]/g, function (d) { return String(BURMESE_DIGITS.indexOf(d)); });
       }
-      function toBurmeseDigits(n) {
-        return String(n).replace(/[0-9]/g, function (d) { return BURMESE_DIGITS[Number(d)]; });
-      }
 
       // Series names in catalog order (first appearance wins).
       var SERIES_ORDER = [];
@@ -588,11 +581,7 @@
           var title = document.createElement("h3");
           title.className = "series-title";
           title.textContent = series;
-          var count = document.createElement("span");
-          count.className = "series-count";
-          count.textContent = "အပိုင်း " + toBurmeseDigits(all.length) + " ပိုင်း";
           head.appendChild(title);
-          head.appendChild(count);
 
           var grid = document.createElement("div");
           grid.className = "ep-grid";
